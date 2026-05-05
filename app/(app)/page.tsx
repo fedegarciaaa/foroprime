@@ -75,7 +75,7 @@ export default async function HomePage({
         <div className="rounded-lg border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
           <p className="mb-2">Aún no hay posts en ForoPrime.</p>
           <Button asChild size="sm">
-            <Link href="/s/general/crear">Publica el primero</Link>
+            <Link href="/s/rotulacion/crear">Publica el primero</Link>
           </Button>
         </div>
       ) : (
