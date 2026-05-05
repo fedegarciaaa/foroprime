@@ -28,10 +28,10 @@ export default async function HomePage({
             <Sparkles className="h-3 w-3" /> Comunidad abierta
           </span>
           <h1 className="mt-3 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
-            Conversaciones que <span className="text-primary">importan</span>.
+            Foro sobre <span className="text-primary">PRIME</span>.
           </h1>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground sm:text-base">
-            ForoPrime es una comunidad moderna de subforos. Crea cuenta gratis para publicar, comentar y votar.
+            ForoPrime es una comunidad para poder discutir sobre problemas, actualizaciones y usos de Prime. Crea cuenta gratis para publicar, comentar y votar.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button asChild>

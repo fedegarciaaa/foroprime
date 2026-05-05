@@ -5,11 +5,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "ForoPrime — Conversaciones que importan",
+    default: "ForoPrime",
     template: "%s · ForoPrime",
   },
   description:
-    "Comunidad moderna de subforos: comparte, debate y descubre las mejores conversaciones.",
+    "Comunidad de prime: comparte, debate y descubre las mejores conversaciones.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   openGraph: {
     type: "website",
