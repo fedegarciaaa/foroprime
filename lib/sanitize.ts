@@ -1,11 +1,27 @@
-import DOMPurify from "isomorphic-dompurify";
+const ALLOWED_TAGS = new Set([
+  "p", "br", "strong", "em", "code", "pre",
+  "blockquote", "ul", "ol", "li", "a",
+  "h1", "h2", "h3", "h4",
+]);
+
+function sanitizeHtml(html: string): string {
+  return html.replace(/<(\/?)([\w]+)([^>]*)>/g, (_full, slash, rawTag, attrs) => {
+    const tag = rawTag.toLowerCase();
+    if (!ALLOWED_TAGS.has(tag)) return "";
+    if (slash) return `</${tag}>`;
+    if (tag === "a") {
+      const href = /href="(https?:\/\/[^"]+)"/.exec(attrs)?.[1] ?? "";
+      if (!href) return "";
+      return `<a href="${href}" rel="nofollow ugc noopener noreferrer" target="_blank">`;
+    }
+    return `<${tag}>`;
+  });
+}
 
 /**
  * Renderiza markdown muy básico a HTML y lo sanitiza con allowlist estricta.
- * Para MVP no usamos un parser markdown completo: soporta párrafos, **bold**,
- * *italic*, `code`, ``` ``` blocks, > quotes, listas, [links].
- *
- * El HTML resultante SIEMPRE pasa por DOMPurify antes de persistirse.
+ * Soporta: párrafos, **bold**, *italic*, `code`, ``` blocks, > quotes, listas, [links].
+ * No depende de DOM ni jsdom — seguro en entornos serverless.
  */
 export function renderMarkdownSafe(md: string): string {
   // Escape HTML primero para que el markdown no pueda inyectar tags
@@ -56,26 +72,5 @@ export function renderMarkdownSafe(md: string): string {
     })
     .join("");
 
-  // Sanitización final con allowlist estricta
-  return DOMPurify.sanitize(paragraphs, {
-    ALLOWED_TAGS: [
-      "p",
-      "br",
-      "strong",
-      "em",
-      "code",
-      "pre",
-      "blockquote",
-      "ul",
-      "ol",
-      "li",
-      "a",
-      "h1",
-      "h2",
-      "h3",
-      "h4",
-    ],
-    ALLOWED_ATTR: ["href", "rel", "target"],
-    ALLOWED_URI_REGEXP: /^https?:\/\//i,
-  });
+  return sanitizeHtml(paragraphs);
 }
