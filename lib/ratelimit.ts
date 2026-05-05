@@ -13,7 +13,12 @@ const hasUpstash =
   Boolean(process.env.UPSTASH_REDIS_REST_URL) &&
   Boolean(process.env.UPSTASH_REDIS_REST_TOKEN);
 
-const redis = hasUpstash ? Redis.fromEnv() : null;
+let redis: Redis | null = null;
+try {
+  if (hasUpstash) redis = Redis.fromEnv();
+} catch {
+  redis = null;
+}
 
 function makeLimiter(tokens: number, window: Parameters<typeof Ratelimit.slidingWindow>[1]) {
   if (!redis) {
