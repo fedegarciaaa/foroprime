@@ -18,10 +18,9 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  experimental: {
-    serverActions: {
-      bodySizeLimit: "2mb",
-    },
+  serverExternalPackages: ["@upstash/redis", "@upstash/ratelimit"],
+  serverActions: {
+    bodySizeLimit: "2mb",
   },
   images: {
     remotePatterns: [
