@@ -21,7 +21,7 @@ export async function loadPosts({
   let query = supabase
     .from("posts")
     .select(
-      "id, title, slug, body_md, score, comment_count, created_at, author_id, subforum:subforums!inner(slug, name), author:profiles!inner(username)",
+      "id, title, slug, body_md, score, comment_count, created_at, author_id, subforum:subforums!inner(slug, name), author:profiles!posts_author_id_fkey!inner(username)",
     )
     .is("deleted_at", null)
     .limit(limit);
