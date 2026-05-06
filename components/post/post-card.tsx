@@ -15,10 +15,12 @@ export type PostCardData = {
   subforum_slug: string;
   subforum_name: string;
   author_username: string;
+  author_id: string;
   my_vote?: -1 | 0 | 1;
 };
 
-export function PostCard({ post, authed }: { post: PostCardData; authed: boolean }) {
+export function PostCard({ post, authed, currentUserId }: { post: PostCardData; authed: boolean; currentUserId?: string | null }) {
+  const isOwn = !!currentUserId && currentUserId === post.author_id;
   const preview = post.body_md.length > 240 ? `${post.body_md.slice(0, 240)}…` : post.body_md;
 
   return (
@@ -30,6 +32,7 @@ export function PostCard({ post, authed }: { post: PostCardData; authed: boolean
           initialScore={post.score}
           initialMyVote={(post.my_vote ?? 0) as -1 | 0 | 1}
           authed={authed}
+          isOwn={isOwn}
         />
       </div>
       <div className="min-w-0 flex-1">

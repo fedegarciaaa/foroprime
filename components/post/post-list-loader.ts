@@ -11,7 +11,7 @@ export async function loadPosts({
   subforumSlug?: string;
   order?: Order;
   limit?: number;
-}): Promise<{ posts: PostCardData[]; authed: boolean }> {
+}): Promise<{ posts: PostCardData[]; authed: boolean; currentUserId: string | null }> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -21,7 +21,7 @@ export async function loadPosts({
   let query = supabase
     .from("posts")
     .select(
-      "id, title, slug, body_md, score, comment_count, created_at, subforum:subforums!inner(slug, name), author:profiles!inner(username)",
+      "id, title, slug, body_md, score, comment_count, created_at, author_id, subforum:subforums!inner(slug, name), author:profiles!inner(username)",
     )
     .is("deleted_at", null)
     .limit(limit);
@@ -38,7 +38,7 @@ export async function loadPosts({
   const { data, error } = await query;
   if (error) {
     console.error("loadPosts error", error);
-    return { posts: [], authed };
+    return { posts: [], authed, currentUserId: user?.id ?? null };
   }
 
   const rows = (data ?? []) as Array<{
@@ -49,6 +49,7 @@ export async function loadPosts({
     score: number;
     comment_count: number;
     created_at: string;
+    author_id: string;
     subforum: { slug: string; name: string } | null;
     author: { username: string } | null;
   }>;
@@ -80,8 +81,9 @@ export async function loadPosts({
       subforum_slug: r.subforum!.slug,
       subforum_name: r.subforum!.name,
       author_username: r.author!.username,
+      author_id: r.author_id,
       my_vote: myVotes.get(r.id) ?? 0,
     }));
 
-  return { posts, authed };
+  return { posts, authed, currentUserId: user?.id ?? null };
 }
