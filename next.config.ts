@@ -19,8 +19,10 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   serverExternalPackages: ["@upstash/redis", "@upstash/ratelimit"],
-  serverActions: {
-    bodySizeLimit: "2mb",
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "2mb",
+    },
   },
   images: {
     remotePatterns: [

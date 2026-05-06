@@ -57,7 +57,7 @@ export function UserMenu({ username, displayName, avatarUrl }: Props) {
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuItem asChild>
-          <Link href="/s/rotulacion/crear">
+          <Link href="/crear">
             <PenSquare className="h-4 w-4" /> Crear post
           </Link>
         </DropdownMenuItem>
