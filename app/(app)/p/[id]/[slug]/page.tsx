@@ -102,7 +102,7 @@ export default async function PostDetailPage({
   const { data: post } = await supabase
     .from("posts")
     .select(
-      "id, title, slug, body_html, body_md, score, comment_count, created_at, updated_at, deleted_at, author_id, subforum:subforums(slug, name), author:profiles(username, display_name, avatar_url)",
+      "id, title, slug, body_html, body_md, score, comment_count, created_at, updated_at, deleted_at, author_id, subforum:subforums(slug, name), author:profiles!posts_author_id_fkey(username, display_name, avatar_url)",
     )
     .eq("id", postId)
     .maybeSingle();
