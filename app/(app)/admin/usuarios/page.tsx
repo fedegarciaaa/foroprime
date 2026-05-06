@@ -3,29 +3,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
-import { updateUserRole, toggleBan, adminDeleteUser } from "@/lib/actions/admin";
+import { UserAdminActions } from "@/components/admin/user-admin-actions";
 import { formatRelativeEs } from "@/lib/utils";
-
-async function doUpdateRole(fd: FormData) {
-  "use server";
-  await updateUserRole(fd);
-}
-
-async function doToggleBan(fd: FormData) {
-  "use server";
-  await toggleBan(fd);
-}
-
-async function doDeleteUser(fd: FormData) {
-  "use server";
-  await adminDeleteUser(fd);
-}
-
-const ROLES = [
-  { value: "user", label: "Usuario" },
-  { value: "moderador", label: "Moderador" },
-  { value: "admin", label: "Admin" },
-];
 
 export default async function AdminUsuariosPage() {
   const supabase = await createClient();
@@ -42,7 +21,6 @@ export default async function AdminUsuariosPage() {
 
   const isAdmin = myProfile.role === "admin";
 
-  // profiles: select público → el cliente normal lee todos los perfiles
   const { data: users } = await supabase
     .from("profiles")
     .select("id, username, display_name, avatar_url, role, banned_at, created_at")
@@ -102,52 +80,13 @@ export default async function AdminUsuariosPage() {
                 </div>
 
                 {!isSelf ? (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <form action={doUpdateRole} className="flex items-center">
-                      <input type="hidden" name="userId" value={u.id} />
-                      <select
-                        name="role"
-                        defaultValue={u.role}
-                        className="rounded-md border border-border bg-background px-2 py-1 text-xs"
-                        onChange={(e) => (e.currentTarget.form as HTMLFormElement).requestSubmit()}
-                      >
-                        {ROLES.map((r) => (
-                          <option key={r.value} value={r.value}>{r.label}</option>
-                        ))}
-                      </select>
-                    </form>
-
-                    <form action={doToggleBan}>
-                      <input type="hidden" name="userId" value={u.id} />
-                      <button
-                        type="submit"
-                        className={`rounded-md border px-3 py-1 text-xs font-medium transition-colors ${
-                          isBanned
-                            ? "border-border hover:bg-accent"
-                            : "border-destructive/40 text-destructive hover:bg-destructive/10"
-                        }`}
-                      >
-                        {isBanned ? "Reactivar" : "Suspender"}
-                      </button>
-                    </form>
-
-                    {isAdmin ? (
-                      <form action={doDeleteUser}>
-                        <input type="hidden" name="userId" value={u.id} />
-                        <button
-                          type="submit"
-                          className="rounded-md border border-destructive bg-destructive/10 px-3 py-1 text-xs font-medium text-destructive hover:bg-destructive/20"
-                          onClick={(e) => {
-                            if (!confirm(`¿Eliminar la cuenta de @${u.username}? Esta acción es permanente.`)) {
-                              e.preventDefault();
-                            }
-                          }}
-                        >
-                          Eliminar cuenta
-                        </button>
-                      </form>
-                    ) : null}
-                  </div>
+                  <UserAdminActions
+                    userId={u.id}
+                    username={u.username}
+                    currentRole={u.role}
+                    isBanned={isBanned}
+                    canDelete={isAdmin}
+                  />
                 ) : null}
               </div>
             </Card>
