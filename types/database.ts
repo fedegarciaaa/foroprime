@@ -177,6 +177,61 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: number
+          post_id: number
+          reason: string
+          reporter_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: never
+          post_id: number
+          reason: string
+          reporter_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: never
+          post_id?: number
+          reason?: string
+          reporter_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subforums: {
         Row: {
           created_at: string
@@ -311,6 +366,9 @@ export type Database = {
           username: string
         }[]
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
+      text2ltree: { Args: { "": string }; Returns: unknown }
       vote_comment: {
         Args: { p_comment_id: number; p_value: number }
         Returns: number
