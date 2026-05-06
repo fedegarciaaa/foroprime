@@ -81,3 +81,42 @@ export async function signOut(): Promise<never> {
   await supabase.auth.signOut();
   redirect("/");
 }
+
+export async function resetPassword(formData: FormData): Promise<ActionResult> {
+  const email = (formData.get("email") as string | null)?.trim() ?? "";
+  if (!email || !email.includes("@")) return fail(ERR.INVALID_INPUT, { email: ["Email inválido"] });
+
+  const ip = getClientIp(await headers());
+  try {
+    await enforceLimit("auth", `reset:${ip}:${email}`);
+  } catch {
+    return fail(ERR.RATE_LIMITED);
+  }
+
+  const supabase = await createClient();
+  const origin = (await headers()).get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL!;
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/callback?next=/nueva-contrasena`,
+  });
+  if (error) {
+    console.error("resetPassword error", error);
+    return fail(ERR.UNKNOWN);
+  }
+  return ok(undefined);
+}
+
+export async function updatePassword(formData: FormData): Promise<ActionResult> {
+  const password = (formData.get("password") as string | null) ?? "";
+  const confirmPassword = (formData.get("confirmPassword") as string | null) ?? "";
+
+  if (password.length < 8) return fail(ERR.INVALID_INPUT, { password: ["Mínimo 8 caracteres"] });
+  if (password !== confirmPassword) return fail(ERR.INVALID_INPUT, { confirmPassword: ["Las contraseñas no coinciden"] });
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    console.error("updatePassword error", error);
+    return fail(ERR.UNKNOWN);
+  }
+  return ok(undefined);
+}
