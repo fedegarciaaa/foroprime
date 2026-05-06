@@ -88,6 +88,16 @@ export default async function PostDetailPage({
   } = await supabase.auth.getUser();
   const authed = !!user;
 
+  let isAdmin = false;
+  if (user) {
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    isAdmin = prof?.role === "admin" || prof?.role === "moderador" || prof?.role === "moderator";
+  }
+
   const { data: post } = await supabase
     .from("posts")
     .select(
@@ -176,13 +186,14 @@ export default async function PostDetailPage({
               ) : null}
             </header>
 
-            {isOwn ? (
+            {isOwn || isAdmin ? (
               <PostActions
                 postId={post.id}
                 initialTitle={post.title}
                 initialBodyMd={post.body_md}
                 bodyHtml={post.body_html}
                 subforumSlug={subforum?.slug ?? ""}
+                isAdmin={isAdmin && !isOwn}
               />
             ) : (
               <>
@@ -220,7 +231,7 @@ export default async function PostDetailPage({
           <CommentForm postId={post.id} authed={authed} />
         </div>
 
-        <CommentTree nodes={tree} postId={post.id} authed={authed} />
+        <CommentTree nodes={tree} postId={post.id} authed={authed} currentUserId={user?.id ?? null} isAdmin={isAdmin} />
       </section>
     </article>
   );

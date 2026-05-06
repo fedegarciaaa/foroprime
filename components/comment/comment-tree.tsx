@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
-import { ChevronDown, ChevronRight, Reply } from "lucide-react";
+import { ChevronDown, ChevronRight, Reply, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { VoteButtons } from "@/components/post/vote-buttons";
 import { CommentForm } from "@/components/comment/comment-form";
+import { toast } from "@/components/ui/toaster";
+import { deleteComment } from "@/lib/actions/comments";
 import { formatRelativeEs, cn } from "@/lib/utils";
 
 export type CommentNode = {
@@ -30,10 +32,14 @@ export function CommentTree({
   nodes,
   postId,
   authed,
+  currentUserId,
+  isAdmin,
 }: {
   nodes: CommentNode[];
   postId: number;
   authed: boolean;
+  currentUserId?: string | null;
+  isAdmin?: boolean;
 }) {
   if (nodes.length === 0) {
     return (
@@ -45,17 +51,39 @@ export function CommentTree({
   return (
     <ul className="space-y-3">
       {nodes.map((n) => (
-        <CommentItem key={n.id} node={n} postId={postId} authed={authed} />
+        <CommentItem key={n.id} node={n} postId={postId} authed={authed} currentUserId={currentUserId} isAdmin={isAdmin} />
       ))}
     </ul>
   );
 }
 
-function CommentItem({ node, postId, authed }: { node: CommentNode; postId: number; authed: boolean }) {
+function CommentItem({
+  node,
+  postId,
+  authed,
+  currentUserId,
+  isAdmin,
+}: {
+  node: CommentNode;
+  postId: number;
+  authed: boolean;
+  currentUserId?: string | null;
+  isAdmin?: boolean;
+}) {
   const [collapsed, setCollapsed] = useState(false);
   const [replying, setReplying] = useState(false);
+  const [deletePending, startDeleteTransition] = useTransition();
   const isDeleted = !!node.deleted_at;
   const initial = (node.display_name ?? node.username).charAt(0).toUpperCase();
+  const canDelete = !isDeleted && (isAdmin || currentUserId === node.author_id);
+
+  function onDelete() {
+    if (!confirm("¿Eliminar este comentario?")) return;
+    startDeleteTransition(async () => {
+      const result = await deleteComment(node.id);
+      if (!result.ok) toast({ title: "No se pudo eliminar", description: result.error, variant: "destructive" });
+    });
+  }
 
   return (
     <li className={cn("group", node.depth > 0 && "border-l border-border pl-3 sm:pl-4")}>
@@ -104,14 +132,27 @@ function CommentItem({ node, postId, authed }: { node: CommentNode; postId: numb
                   authed={authed}
                   layout="horizontal"
                 />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-xs"
-                  onClick={() => setReplying((r) => !r)}
-                >
-                  <Reply className="h-3 w-3" /> Responder
-                </Button>
+                {authed ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => setReplying((r) => !r)}
+                  >
+                    <Reply className="h-3 w-3" /> Responder
+                  </Button>
+                ) : null}
+                {canDelete ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs text-destructive/70 hover:text-destructive"
+                    onClick={onDelete}
+                    disabled={deletePending}
+                  >
+                    <Trash2 className="h-3 w-3" /> Eliminar
+                  </Button>
+                ) : null}
               </div>
               {replying ? (
                 <div className="mt-2">
@@ -128,7 +169,7 @@ function CommentItem({ node, postId, authed }: { node: CommentNode; postId: numb
               {node.children.length > 0 ? (
                 <ul className="mt-3 space-y-3">
                   {node.children.map((c) => (
-                    <CommentItem key={c.id} node={c} postId={postId} authed={authed} />
+                    <CommentItem key={c.id} node={c} postId={postId} authed={authed} currentUserId={currentUserId} isAdmin={isAdmin} />
                   ))}
                 </ul>
               ) : null}

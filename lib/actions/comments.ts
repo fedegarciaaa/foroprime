@@ -25,6 +25,13 @@ export async function createComment(formData: FormData): Promise<ActionResult<{ 
   } = await supabase.auth.getUser();
   if (!user) return fail(ERR.UNAUTHENTICATED);
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("banned_at")
+    .eq("id", user.id)
+    .single();
+  if (profile?.banned_at) return fail("Tu cuenta está suspendida y no puedes comentar");
+
   const ip = getClientIp(await headers());
   try {
     await enforceLimit("createComment", `comment:${user.id}:${ip}`);
