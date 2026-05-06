@@ -1,7 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { updateUserRole, toggleBan, adminDeleteUser } from "@/lib/actions/admin";
@@ -43,8 +42,8 @@ export default async function AdminUsuariosPage() {
 
   const isAdmin = myProfile.role === "admin";
 
-  const adminClient = createAdminClient();
-  const { data: users } = await adminClient
+  // profiles: select público → el cliente normal lee todos los perfiles
+  const { data: users } = await supabase
     .from("profiles")
     .select("id, username, display_name, avatar_url, role, banned_at, created_at")
     .order("created_at", { ascending: false });
