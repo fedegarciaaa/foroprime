@@ -8,6 +8,7 @@ import { renderMarkdownSafe } from "@/lib/sanitize";
 import { enforceLimit } from "@/lib/ratelimit";
 import { getClientIp } from "@/lib/utils";
 import { fail, ok, ERR, type ActionResult } from "@/lib/actions/result";
+import { notifyPostSubscribers, notifyCommentReply } from "@/lib/notifications/email";
 
 const MAX_DEPTH = 8;
 
@@ -98,6 +99,65 @@ export async function createComment(formData: FormData): Promise<ActionResult<{ 
   if (updErr) console.error("createComment path update error", updErr);
 
   revalidatePath(`/p/${parsed.data.postId}`, "page");
+
+  // Notificaciones por email (fire-and-forget — no bloqueamos la respuesta)
+  const { data: postData } = await supabase
+    .from("posts")
+    .select("title, slug, author_id")
+    .eq("id", parsed.data.postId)
+    .single();
+
+  const { data: commenterProfile } = await supabase
+    .from("profiles")
+    .select("username")
+    .eq("id", user.id)
+    .single();
+
+  const commenterUsername = commenterProfile?.username ?? "alguien";
+
+  if (postData) {
+    // Notificar a suscriptores del post (excluyendo al comentarista)
+    // Si es respuesta a un comentario, excluir también al autor del comentario padre
+    // (recibirá el email de "reply" más abajo)
+    const subscriberExclusions = new Set([user.id]);
+
+    if (parsed.data.parentId) {
+      // Notificar al autor del comentario padre
+      const { data: parentComment } = await supabase
+        .from("comments")
+        .select("author_id, body_md")
+        .eq("id", parsed.data.parentId)
+        .single();
+
+      if (parentComment && parentComment.author_id !== user.id) {
+        subscriberExclusions.add(parentComment.author_id);
+
+        notifyCommentReply({
+          parentAuthorId: parentComment.author_id,
+          postId: parsed.data.postId,
+          postTitle: postData.title,
+          postSlug: postData.slug,
+          commentId: inserted.id,
+          replierUsername: commenterUsername,
+          replyExcerpt: parsed.data.body,
+        }).catch(err => console.error("notifyCommentReply error", err));
+      }
+    }
+
+    // Notificar suscriptores del post (excluyendo comentarista y autor del padre si aplica)
+    // Usamos el primer userId de exclusión (el comentarista). Para excluir múltiples,
+    // llamamos por cada usuario extra manualmente en el helper.
+    notifyPostSubscribers({
+      postId: parsed.data.postId,
+      postTitle: postData.title,
+      postSlug: postData.slug,
+      commenterUsername,
+      commentId: inserted.id,
+      excludeUserId: user.id,
+      extraExcludeIds: Array.from(subscriberExclusions),
+    }).catch(err => console.error("notifyPostSubscribers error", err));
+  }
+
   return ok({ id: inserted.id });
 }
 

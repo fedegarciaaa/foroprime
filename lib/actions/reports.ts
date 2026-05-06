@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { fail, ok, ERR, type ActionResult } from "@/lib/actions/result";
 import { Resend } from "resend";
 import { REPORT_REASONS } from "@/lib/reports-config";
+import { notifyPostDeleted } from "@/lib/notifications/email";
 
 export async function reportPost(formData: FormData): Promise<ActionResult> {
   const supabase = await createClient();
@@ -132,11 +133,25 @@ export async function resolveReport(formData: FormData): Promise<ActionResult> {
       .single();
 
     if (report) {
+      const { data: postData } = await supabase
+        .from("posts")
+        .select("title, author_id")
+        .eq("id", report.post_id)
+        .single();
+
       const { error } = await supabase
         .from("posts")
         .update({ deleted_at: new Date().toISOString() })
         .eq("id", report.post_id);
       if (error) return fail(ERR.FORBIDDEN);
+
+      // Notificar al autor que su post ha sido eliminado
+      if (postData) {
+        notifyPostDeleted({
+          authorId: postData.author_id,
+          postTitle: postData.title,
+        }).catch(err => console.error("notifyPostDeleted error", err));
+      }
     }
   }
 

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fail, ok, ERR, type ActionResult } from "@/lib/actions/result";
+import { notifyAccountStatus } from "@/lib/notifications/email";
 
 const ALLOWED_ROLES = ["user", "moderador", "admin"] as const;
 type Role = (typeof ALLOWED_ROLES)[number];
@@ -79,6 +80,12 @@ export async function toggleBan(formData: FormData): Promise<ActionResult> {
     console.error("toggleBan error", error);
     return fail(ERR.UNKNOWN);
   }
+
+  // Notificar al usuario del cambio de estado
+  notifyAccountStatus({
+    userId: targetId,
+    suspended: !!newBannedAt,
+  }).catch(err => console.error("notifyAccountStatus error", err));
 
   revalidatePath("/admin/usuarios");
   return ok(undefined);
