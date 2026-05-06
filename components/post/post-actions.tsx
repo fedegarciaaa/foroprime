@@ -16,9 +16,10 @@ type Props = {
   initialBodyMd: string;
   bodyHtml: string;
   subforumSlug: string;
+  isAdmin?: boolean;
 };
 
-export function PostActions({ postId, initialTitle, initialBodyMd, bodyHtml, subforumSlug }: Props) {
+export function PostActions({ postId, initialTitle, initialBodyMd, bodyHtml, subforumSlug, isAdmin }: Props) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(initialTitle);
@@ -103,9 +104,11 @@ export function PostActions({ postId, initialTitle, initialBodyMd, bodyHtml, sub
       <h1 className="mb-3 text-2xl font-semibold tracking-tight">{initialTitle}</h1>
       <div className="prose-fp text-sm" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
       <div className="mt-4 flex gap-1">
-        <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setEditing(true)}>
-          <Pencil className="h-3.5 w-3.5" /> Editar
-        </Button>
+        {!isAdmin ? (
+          <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setEditing(true)}>
+            <Pencil className="h-3.5 w-3.5" /> Editar
+          </Button>
+        ) : null}
         <Button
           variant="ghost"
           size="sm"
