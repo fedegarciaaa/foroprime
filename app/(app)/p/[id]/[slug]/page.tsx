@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { VoteButtons } from "@/components/post/vote-buttons";
 import { PostActions } from "@/components/post/post-actions";
+import { ReportPostForm } from "@/components/post/report-post-form";
 import { CommentForm } from "@/components/comment/comment-form";
 import { CommentTree, type CommentNode } from "@/components/comment/comment-tree";
 import { formatRelativeEs } from "@/lib/utils";
@@ -187,6 +188,11 @@ export default async function PostDetailPage({
               <>
                 <h1 className="mb-3 text-2xl font-semibold tracking-tight">{post.title}</h1>
                 <div className="prose-fp text-sm" dangerouslySetInnerHTML={{ __html: post.body_html }} />
+                {authed ? (
+                  <div className="mt-3">
+                    <ReportPostForm postId={post.id} />
+                  </div>
+                ) : null}
               </>
             )}
 

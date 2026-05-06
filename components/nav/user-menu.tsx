@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, User as UserIcon, PenSquare } from "lucide-react";
+import { LogOut, User as UserIcon, PenSquare, ShieldAlert } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,9 +19,10 @@ type Props = {
   username: string | null;
   displayName: string | null;
   avatarUrl: string | null;
+  role?: string;
 };
 
-export function UserMenu({ username, displayName, avatarUrl }: Props) {
+export function UserMenu({ username, displayName, avatarUrl, role }: Props) {
   const router = useRouter();
 
   async function signOut() {
@@ -61,6 +62,16 @@ export function UserMenu({ username, displayName, avatarUrl }: Props) {
             <PenSquare className="h-4 w-4" /> Crear post
           </Link>
         </DropdownMenuItem>
+        {role && ["admin", "moderador"].includes(role) ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/admin/denuncias">
+                <ShieldAlert className="h-4 w-4" /> Panel de denuncias
+              </Link>
+            </DropdownMenuItem>
+          </>
+        ) : null}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut}>
           <LogOut className="h-4 w-4" /> Cerrar sesión

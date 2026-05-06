@@ -12,11 +12,11 @@ export async function Navbar() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let profile: { username: string | null; display_name: string | null; avatar_url: string | null } | null = null;
+  let profile: { username: string | null; display_name: string | null; avatar_url: string | null; role: string } | null = null;
   if (user) {
     const { data } = await supabase
       .from("profiles")
-      .select("username, display_name, avatar_url")
+      .select("username, display_name, avatar_url, role")
       .eq("id", user.id)
       .maybeSingle();
     profile = data;
@@ -45,6 +45,7 @@ export async function Navbar() {
               username={profile.username}
               displayName={profile.display_name}
               avatarUrl={profile.avatar_url}
+              role={profile.role}
             />
           ) : (
             <>
