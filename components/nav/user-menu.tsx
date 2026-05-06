@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Settings, User as UserIcon, PenSquare } from "lucide-react";
+import { LogOut, User as UserIcon, PenSquare } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -59,11 +59,6 @@ export function UserMenu({ username, displayName, avatarUrl }: Props) {
         <DropdownMenuItem asChild>
           <Link href="/crear">
             <PenSquare className="h-4 w-4" /> Crear post
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/ajustes">
-            <Settings className="h-4 w-4" /> Ajustes
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
