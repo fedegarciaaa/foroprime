@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { VoteButtons } from "@/components/post/vote-buttons";
+import { PostActions } from "@/components/post/post-actions";
 import { CommentForm } from "@/components/comment/comment-form";
 import { CommentTree, type CommentNode } from "@/components/comment/comment-tree";
 import { formatRelativeEs } from "@/lib/utils";
@@ -89,12 +90,14 @@ export default async function PostDetailPage({
   const { data: post } = await supabase
     .from("posts")
     .select(
-      "id, title, slug, body_html, body_md, score, comment_count, created_at, deleted_at, subforum:subforums(slug, name), author:profiles(username, display_name, avatar_url)",
+      "id, title, slug, body_html, body_md, score, comment_count, created_at, updated_at, deleted_at, author_id, subforum:subforums(slug, name), author:profiles(username, display_name, avatar_url)",
     )
     .eq("id", postId)
     .maybeSingle();
 
   if (!post || post.deleted_at) notFound();
+
+  const isOwn = !!user && user.id === post.author_id;
 
   let myVote: -1 | 0 | 1 = 0;
   if (user) {
@@ -113,6 +116,8 @@ export default async function PostDetailPage({
   const subforum = post.subforum as unknown as { slug: string; name: string } | null;
   const author = post.author as unknown as { username: string; display_name: string | null; avatar_url: string | null } | null;
   const initial = (author?.display_name ?? author?.username ?? "?").charAt(0).toUpperCase();
+
+  const wasEdited = !!post.updated_at && post.updated_at !== post.created_at;
 
   return (
     <article className="mx-auto max-w-3xl">
@@ -133,6 +138,7 @@ export default async function PostDetailPage({
               initialScore={post.score}
               initialMyVote={myVote}
               authed={authed}
+              isOwn={isOwn}
             />
           </div>
           <div className="min-w-0 flex-1">
@@ -157,10 +163,33 @@ export default async function PostDetailPage({
                 </span>
                 <span>·</span>
                 <span>{formatRelativeEs(post.created_at)}</span>
+                {wasEdited ? (
+                  <>
+                    <span>·</span>
+                    <span className="italic">editado {formatRelativeEs(post.updated_at!)}</span>
+                  </>
+                ) : null}
               </div>
-              <h1 className="mt-1 text-2xl font-semibold tracking-tight">{post.title}</h1>
+              {!isOwn ? (
+                <h1 className="mt-1 text-2xl font-semibold tracking-tight">{post.title}</h1>
+              ) : null}
             </header>
-            <div className="prose-fp text-sm" dangerouslySetInnerHTML={{ __html: post.body_html }} />
+
+            {isOwn ? (
+              <PostActions
+                postId={post.id}
+                initialTitle={post.title}
+                initialBodyMd={post.body_md}
+                bodyHtml={post.body_html}
+                subforumSlug={subforum?.slug ?? ""}
+              />
+            ) : (
+              <>
+                <h1 className="mb-3 text-2xl font-semibold tracking-tight">{post.title}</h1>
+                <div className="prose-fp text-sm" dangerouslySetInnerHTML={{ __html: post.body_html }} />
+              </>
+            )}
+
             <div className="mt-3 sm:hidden">
               <VoteButtons
                 target="post"
@@ -168,6 +197,7 @@ export default async function PostDetailPage({
                 initialScore={post.score}
                 initialMyVote={myVote}
                 authed={authed}
+                isOwn={isOwn}
                 layout="horizontal"
               />
             </div>

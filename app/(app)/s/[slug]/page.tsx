@@ -30,7 +30,7 @@ export default async function SubforumPage({
     .maybeSingle();
   if (!subforum) notFound();
 
-  const { posts, authed } = await loadPosts({ subforumSlug: subforum.slug, order });
+  const { posts, authed, currentUserId } = await loadPosts({ subforumSlug: subforum.slug, order });
 
   return (
     <div className="space-y-4">
@@ -79,7 +79,7 @@ export default async function SubforumPage({
       ) : (
         <div className="space-y-3">
           {posts.map((p) => (
-            <PostCard key={p.id} post={p} authed={authed} />
+            <PostCard key={p.id} post={p} authed={authed} currentUserId={currentUserId} />
           ))}
         </div>
       )}

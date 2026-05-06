@@ -13,12 +13,13 @@ type Props = {
   initialScore: number;
   initialMyVote: -1 | 0 | 1;
   authed: boolean;
+  isOwn?: boolean;
   layout?: "vertical" | "horizontal";
 };
 
 type VoteState = { score: number; my: -1 | 0 | 1 };
 
-export function VoteButtons({ target, targetId, initialScore, initialMyVote, authed, layout = "vertical" }: Props) {
+export function VoteButtons({ target, targetId, initialScore, initialMyVote, authed, isOwn = false, layout = "vertical" }: Props) {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [state, setOptimistic] = useOptimistic<VoteState, -1 | 1>(
@@ -31,6 +32,7 @@ export function VoteButtons({ target, targetId, initialScore, initialMyVote, aut
   );
 
   function vote(value: -1 | 1) {
+    if (isOwn) return;
     if (!authed) {
       toast({
         title: "Inicia sesión para votar",
@@ -66,8 +68,11 @@ export function VoteButtons({ target, targetId, initialScore, initialMyVote, aut
         onClick={() => vote(1)}
         aria-label="Votar arriba"
         aria-pressed={isUp}
+        disabled={isOwn}
+        title={isOwn ? "No puedes votar tu propio post" : undefined}
         className={cn(
-          "rounded p-1 transition-colors hover:bg-accent",
+          "rounded p-1 transition-colors",
+          isOwn ? "cursor-not-allowed opacity-40" : "hover:bg-accent",
           isUp ? "text-[var(--color-upvote)]" : "text-muted-foreground",
         )}
       >
@@ -87,8 +92,11 @@ export function VoteButtons({ target, targetId, initialScore, initialMyVote, aut
         onClick={() => vote(-1)}
         aria-label="Votar abajo"
         aria-pressed={isDown}
+        disabled={isOwn}
+        title={isOwn ? "No puedes votar tu propio post" : undefined}
         className={cn(
-          "rounded p-1 transition-colors hover:bg-accent",
+          "rounded p-1 transition-colors",
+          isOwn ? "cursor-not-allowed opacity-40" : "hover:bg-accent",
           isDown ? "text-[var(--color-downvote)]" : "text-muted-foreground",
         )}
       >

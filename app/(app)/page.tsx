@@ -18,7 +18,7 @@ export default async function HomePage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { posts, authed } = await loadPosts({ order });
+  const { posts, authed, currentUserId } = await loadPosts({ order });
 
   return (
     <div className="space-y-4">
@@ -81,7 +81,7 @@ export default async function HomePage({
       ) : (
         <div className="space-y-3">
           {posts.map((p) => (
-            <PostCard key={p.id} post={p} authed={authed} />
+            <PostCard key={p.id} post={p} authed={authed} currentUserId={currentUserId} />
           ))}
         </div>
       )}
