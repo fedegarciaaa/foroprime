@@ -27,19 +27,17 @@ function isAdmin(role: string | null | undefined) {
 }
 
 export async function updateUserRole(formData: FormData): Promise<ActionResult> {
-  const { user, profile } = await getAdminUser();
+  const { user, profile, supabase } = await getAdminUser();
   if (!user || !isAdmin(profile?.role)) return fail(ERR.FORBIDDEN);
 
   const targetId = formData.get("userId") as string;
   const role = formData.get("role") as string;
 
   if (!targetId || !ALLOWED_ROLES.includes(role as Role)) return fail(ERR.INVALID_INPUT);
-
-  // No se puede cambiar el propio rol
   if (targetId === user.id) return fail("No puedes cambiar tu propio rol");
 
-  const admin = createAdminClient();
-  const { error } = await admin
+  // La política RLS "profiles: admin puede actualizar cualquier" lo permite
+  const { error } = await supabase
     .from("profiles")
     .update({ role })
     .eq("id", targetId);
@@ -54,17 +52,15 @@ export async function updateUserRole(formData: FormData): Promise<ActionResult> 
 }
 
 export async function toggleBan(formData: FormData): Promise<ActionResult> {
-  const { user, profile } = await getAdminUser();
+  const { user, profile, supabase } = await getAdminUser();
   if (!user || !isAdmin(profile?.role)) return fail(ERR.FORBIDDEN);
 
   const targetId = formData.get("userId") as string;
   if (!targetId) return fail(ERR.INVALID_INPUT);
-  if (targetId === user.id) return fail("No puedes banearte a ti mismo");
-
-  const admin = createAdminClient();
+  if (targetId === user.id) return fail("No puedes suspenderte a ti mismo");
 
   // Leer estado actual
-  const { data: target } = await admin
+  const { data: target } = await supabase
     .from("profiles")
     .select("banned_at")
     .eq("id", targetId)
@@ -74,7 +70,7 @@ export async function toggleBan(formData: FormData): Promise<ActionResult> {
 
   const newBannedAt = target.banned_at ? null : new Date().toISOString();
 
-  const { error } = await admin
+  const { error } = await supabase
     .from("profiles")
     .update({ banned_at: newBannedAt })
     .eq("id", targetId);
