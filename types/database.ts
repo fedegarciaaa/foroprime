@@ -180,6 +180,77 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          user_id: string
+          email_enabled: boolean
+          email_on_post_comment: boolean
+          email_on_comment_reply: boolean
+          email_on_post_deleted: boolean
+          email_on_account_status: boolean
+          updated_at: string | null
+        }
+        Insert: {
+          user_id: string
+          email_enabled?: boolean
+          email_on_post_comment?: boolean
+          email_on_comment_reply?: boolean
+          email_on_post_deleted?: boolean
+          email_on_account_status?: boolean
+          updated_at?: string | null
+        }
+        Update: {
+          user_id?: string
+          email_enabled?: boolean
+          email_on_post_comment?: boolean
+          email_on_comment_reply?: boolean
+          email_on_post_deleted?: boolean
+          email_on_account_status?: boolean
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_subscriptions: {
+        Row: {
+          user_id: string
+          post_id: number
+          created_at: string
+        }
+        Insert: {
+          user_id: string
+          post_id: number
+          created_at?: string
+        }
+        Update: {
+          user_id?: string
+          post_id?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_subscriptions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reports: {
         Row: {
           comment: string | null

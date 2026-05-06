@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { VoteButtons } from "@/components/post/vote-buttons";
 import { PostActions } from "@/components/post/post-actions";
 import { ReportPostForm } from "@/components/post/report-post-form";
+import { SubscribeToggle } from "@/components/post/subscribe-toggle";
 import { CommentForm } from "@/components/comment/comment-form";
 import { CommentTree, type CommentNode } from "@/components/comment/comment-tree";
 import { formatRelativeEs } from "@/lib/utils";
@@ -111,14 +112,14 @@ export default async function PostDetailPage({
   const isOwn = !!user && user.id === post.author_id;
 
   let myVote: -1 | 0 | 1 = 0;
+  let isSubscribed = false;
   if (user) {
-    const { data: voteRow } = await supabase
-      .from("votes")
-      .select("value")
-      .eq("post_id", postId)
-      .eq("user_id", user.id)
-      .maybeSingle();
-    myVote = ((voteRow?.value ?? 0) as -1 | 0 | 1);
+    const [voteResult, subResult] = await Promise.all([
+      supabase.from("votes").select("value").eq("post_id", postId).eq("user_id", user.id).maybeSingle(),
+      supabase.from("post_subscriptions").select("user_id").eq("user_id", user.id).eq("post_id", postId).maybeSingle(),
+    ]);
+    myVote = ((voteResult.data?.value ?? 0) as -1 | 0 | 1);
+    isSubscribed = !!subResult.data;
   }
 
   const { data: commentRows } = await supabase.rpc("get_comment_tree", { p_post_id: postId });
@@ -199,13 +200,15 @@ export default async function PostDetailPage({
               <>
                 <h1 className="mb-3 text-2xl font-semibold tracking-tight">{post.title}</h1>
                 <div className="prose-fp text-sm" dangerouslySetInnerHTML={{ __html: post.body_html }} />
-                {authed ? (
-                  <div className="mt-3">
-                    <ReportPostForm postId={post.id} />
-                  </div>
-                ) : null}
               </>
             )}
+
+            {authed ? (
+              <div className="mt-3 flex flex-wrap items-center gap-1">
+                <SubscribeToggle postId={post.id} initialSubscribed={isSubscribed} />
+                {!isOwn && !isAdmin ? <ReportPostForm postId={post.id} /> : null}
+              </div>
+            ) : null}
 
             <div className="mt-3 sm:hidden">
               <VoteButtons

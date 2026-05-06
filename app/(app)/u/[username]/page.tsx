@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { ProfileEditHeader } from "@/components/profile/profile-edit-header";
+import { NotificationSettings } from "@/components/profile/notification-settings";
 import { formatRelativeEs } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ username: string }> }) {
@@ -32,6 +33,35 @@ export default async function ProfilePage({
 
   const isOwn = !!user && user.id === profile.id;
   const initial = (profile.display_name ?? profile.username).charAt(0).toUpperCase();
+
+  // Cargar preferencias y suscripciones solo para el propio perfil
+  let notifPrefs = null;
+  let notifSubs: { post_id: number; post: { title: string; slug: string } | null }[] = [];
+  if (isOwn) {
+    const [prefsResult, subsResult] = await Promise.all([
+      supabase
+        .from("notification_preferences")
+        .select("email_enabled, email_on_post_comment, email_on_comment_reply, email_on_post_deleted, email_on_account_status")
+        .eq("user_id", user!.id)
+        .maybeSingle(),
+      supabase
+        .from("post_subscriptions")
+        .select("post_id, post:posts(title, slug)")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false }),
+    ]);
+    notifPrefs = prefsResult.data ?? {
+      email_enabled: true,
+      email_on_post_comment: true,
+      email_on_comment_reply: true,
+      email_on_post_deleted: true,
+      email_on_account_status: true,
+    };
+    notifSubs = (subsResult.data ?? []).map(s => ({
+      post_id: s.post_id,
+      post: s.post as { title: string; slug: string } | null,
+    }));
+  }
 
   const [{ data: posts }, { data: comments }] = await Promise.all([
     supabase
@@ -138,6 +168,13 @@ export default async function ProfilePage({
           <p className="text-sm text-muted-foreground">Sin comentarios aún.</p>
         )}
       </section>
+
+      {isOwn && notifPrefs ? (
+        <NotificationSettings
+          initialPrefs={notifPrefs}
+          subscriptions={notifSubs}
+        />
+      ) : null}
     </div>
   );
 }

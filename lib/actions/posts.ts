@@ -67,6 +67,12 @@ export async function createPost(formData: FormData): Promise<ActionResult<{ id:
       return fail(ERR.UNKNOWN);
     }
 
+    // Auto-suscribir al autor para recibir notificaciones de su propio post
+    await supabase
+      .from("post_subscriptions")
+      .insert({ user_id: user.id, post_id: inserted.id })
+      .then(() => {});
+
     revalidatePath(`/s/${subforum.slug}`);
     revalidatePath("/");
     return ok({ id: inserted.id, slug: inserted.slug, subforumSlug: subforum.slug });
