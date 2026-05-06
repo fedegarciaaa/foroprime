@@ -14,7 +14,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toaster";
-import { reportPost, REPORT_REASONS } from "@/lib/actions/reports";
+import { reportPost } from "@/lib/actions/reports";
+import { REPORT_REASONS } from "@/lib/reports-config";
 
 export function ReportPostForm({ postId }: { postId: number }) {
   const [open, setOpen] = useState(false);

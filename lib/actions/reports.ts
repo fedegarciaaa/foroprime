@@ -4,16 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { fail, ok, ERR, type ActionResult } from "@/lib/actions/result";
 import { Resend } from "resend";
-
-export const REPORT_REASONS = [
-  { value: "spam",          label: "Spam o publicidad no deseada" },
-  { value: "ofensivo",      label: "Contenido ofensivo o acoso" },
-  { value: "desinformacion",label: "Desinformación o noticias falsas" },
-  { value: "ilegal",        label: "Contenido ilegal" },
-  { value: "otro",          label: "Otro motivo" },
-] as const;
-
-export type ReportReason = (typeof REPORT_REASONS)[number]["value"];
+import { REPORT_REASONS } from "@/lib/reports-config";
 
 export async function reportPost(formData: FormData): Promise<ActionResult> {
   const supabase = await createClient();
