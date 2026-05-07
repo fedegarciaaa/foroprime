@@ -182,9 +182,6 @@ export default async function PostDetailPage({
                   </>
                 ) : null}
               </div>
-              {!isOwn ? (
-                <h1 className="mt-1 text-2xl font-semibold tracking-tight">{post.title}</h1>
-              ) : null}
             </header>
 
             {isOwn || isAdmin ? (
