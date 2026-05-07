@@ -17,11 +17,14 @@ export type PostCardData = {
   author_username: string;
   author_id: string;
   my_vote?: -1 | 0 | 1;
+  image_urls?: string[];
 };
 
 export function PostCard({ post, authed, currentUserId }: { post: PostCardData; authed: boolean; currentUserId?: string | null }) {
   const isOwn = !!currentUserId && currentUserId === post.author_id;
   const preview = post.body_md.length > 240 ? `${post.body_md.slice(0, 240)}…` : post.body_md;
+
+  const hasThumbnail = post.image_urls && post.image_urls.length > 0;
 
   return (
     <Card className="flex gap-3 p-3 transition-colors hover:border-foreground/20">
@@ -71,6 +74,18 @@ export function PostCard({ post, authed, currentUserId }: { post: PostCardData; 
           </Link>
         </div>
       </div>
+      {hasThumbnail && (
+        <Link href={`/p/${post.id}/${post.slug}`} className="shrink-0 self-center">
+          <div className="h-20 w-20 overflow-hidden rounded-md">
+            <img
+              src={post.image_urls![0]}
+              alt=""
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          </div>
+        </Link>
+      )}
     </Card>
   );
 }
