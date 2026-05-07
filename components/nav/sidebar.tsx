@@ -1,14 +1,14 @@
 import Link from "next/link";
-import { Hash, Home, TrendingUp } from "lucide-react";
+import { Hash, Home, PenSquare, TrendingUp } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
 export async function Sidebar({ activeSlug }: { activeSlug?: string }) {
   const supabase = await createClient();
-  const { data: subforums } = await supabase
-    .from("subforums")
-    .select("slug, name")
-    .order("name", { ascending: true });
+  const [{ data: subforums }, { data: { user } }] = await Promise.all([
+    supabase.from("subforums").select("slug, name").order("name", { ascending: true }),
+    supabase.auth.getUser(),
+  ]);
 
   return (
     <aside
@@ -28,6 +28,14 @@ export async function Sidebar({ activeSlug }: { activeSlug?: string }) {
         >
           <TrendingUp className="h-4 w-4" /> Top
         </Link>
+        {user ? (
+          <Link
+            href="/crear"
+            className="flex items-center gap-2 rounded-md px-2.5 py-1.5 font-medium text-primary hover:bg-accent"
+          >
+            <PenSquare className="h-4 w-4" /> Crear post
+          </Link>
+        ) : null}
       </nav>
 
       <div className="mt-6">
