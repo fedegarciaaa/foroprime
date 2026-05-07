@@ -19,7 +19,7 @@ export function ImagePicker({ files, onChange }: ImagePickerProps) {
     const remaining = MAX_IMAGES - files.length;
     for (let i = 0; i < newFiles.length && valid.length < remaining; i++) {
       const f = newFiles[i];
-      if (!ALLOWED_TYPES.includes(f.type)) continue;
+      if (!f || !ALLOWED_TYPES.includes(f.type)) continue;
       if (f.size > MAX_SIZE_BYTES) continue;
       valid.push(f);
     }
