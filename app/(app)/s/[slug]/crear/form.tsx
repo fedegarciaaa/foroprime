@@ -6,22 +6,41 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ImagePicker } from "@/components/ui/image-picker";
 import { createPost } from "@/lib/actions/posts";
+import { uploadPostImage } from "@/lib/storage/images";
 
-export function CreatePostForm({ subforumSlug }: { subforumSlug: string }) {
+export function CreatePostForm({ subforumSlug, userId }: { subforumSlug: string; userId?: string }) {
   const router = useRouter();
   const [error, setError] = useState<string>();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [pending, startTransition] = useTransition();
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(undefined);
     setFieldErrors({});
-    const fd = new FormData(e.currentTarget);
-    fd.set("subforumSlug", subforumSlug);
+    const form = e.currentTarget;
 
     startTransition(async () => {
+      // Upload images first, then create post
+      let imageUrls: string[] = [];
+      if (imageFiles.length > 0 && userId) {
+        try {
+          imageUrls = await Promise.all(imageFiles.map((f) => uploadPostImage(f, userId)));
+        } catch {
+          setError("No se pudieron subir las imágenes. Inténtalo de nuevo.");
+          return;
+        }
+      }
+
+      const fd = new FormData(form);
+      fd.set("subforumSlug", subforumSlug);
+      if (imageUrls.length > 0) {
+        fd.set("imageUrls", imageUrls.join(","));
+      }
+
       const result = await createPost(fd);
       if (!result.ok) {
         setError(result.error);
@@ -70,6 +89,10 @@ export function CreatePostForm({ subforumSlug }: { subforumSlug: string }) {
         <p className="text-xs text-muted-foreground">
           Soporta markdown básico. Los enlaces se sanean automáticamente.
         </p>
+      </div>
+      <div className="space-y-1.5">
+        <Label>Imágenes (opcional)</Label>
+        <ImagePicker files={imageFiles} onChange={setImageFiles} />
       </div>
       {error ? (
         <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">

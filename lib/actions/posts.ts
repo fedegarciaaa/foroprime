@@ -46,6 +46,7 @@ export async function createPost(formData: FormData): Promise<ActionResult<{ id:
       .maybeSingle();
     if (sfErr || !subforum) return fail("Subforo no encontrado");
 
+    const imageUrls = (formData.get("imageUrls") as string ?? "").split(",").filter(Boolean).slice(0, 3);
     const html = renderMarkdownSafe(parsed.data.body);
     const slug = slugify(parsed.data.title) || `post-${Date.now()}`;
 
@@ -58,6 +59,7 @@ export async function createPost(formData: FormData): Promise<ActionResult<{ id:
         slug,
         body_md: parsed.data.body,
         body_html: html,
+        image_urls: imageUrls,
       })
       .select("id, slug")
       .single();
@@ -97,6 +99,7 @@ export async function updatePost(formData: FormData): Promise<ActionResult> {
   } = await supabase.auth.getUser();
   if (!user) return fail(ERR.UNAUTHENTICATED);
 
+  const imageUrls = (formData.get("imageUrls") as string ?? "").split(",").filter(Boolean).slice(0, 3);
   const html = renderMarkdownSafe(parsed.data.body);
   const { error } = await supabase
     .from("posts")
@@ -104,6 +107,7 @@ export async function updatePost(formData: FormData): Promise<ActionResult> {
       title: parsed.data.title,
       body_md: parsed.data.body,
       body_html: html,
+      image_urls: imageUrls,
     })
     .eq("id", parsed.data.id);
   // RLS bloquea si no es autor o moderador → error tipado por postgres

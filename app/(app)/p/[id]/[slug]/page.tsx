@@ -9,6 +9,7 @@ import { ReportPostForm } from "@/components/post/report-post-form";
 import { SubscribeToggle } from "@/components/post/subscribe-toggle";
 import { CommentForm } from "@/components/comment/comment-form";
 import { CommentTree, type CommentNode } from "@/components/comment/comment-tree";
+import { ImageGrid } from "@/components/ui/image-grid";
 import { formatRelativeEs } from "@/lib/utils";
 
 type CommentRow = {
@@ -25,6 +26,7 @@ type CommentRow = {
   created_at: string;
   deleted_at: string | null;
   my_vote: number | null;
+  image_urls: string[] | null;
 };
 
 function buildTree(rows: CommentRow[]): CommentNode[] {
@@ -45,6 +47,7 @@ function buildTree(rows: CommentRow[]): CommentNode[] {
       created_at: r.created_at,
       deleted_at: r.deleted_at,
       my_vote: ((r.my_vote ?? 0) as -1 | 0 | 1),
+      image_urls: r.image_urls ?? [],
       children: [],
     });
   }
@@ -102,7 +105,7 @@ export default async function PostDetailPage({
   const { data: post } = await supabase
     .from("posts")
     .select(
-      "id, title, slug, body_html, body_md, score, comment_count, created_at, updated_at, deleted_at, author_id, subforum:subforums(slug, name), author:profiles!posts_author_id_fkey(username, display_name, avatar_url)",
+      "id, title, slug, body_html, body_md, score, comment_count, created_at, updated_at, deleted_at, author_id, image_urls, subforum:subforums(slug, name), author:profiles!posts_author_id_fkey(username, display_name, avatar_url)",
     )
     .eq("id", postId)
     .maybeSingle();
@@ -192,11 +195,14 @@ export default async function PostDetailPage({
                 bodyHtml={post.body_html}
                 subforumSlug={subforum?.slug ?? ""}
                 isAdmin={isAdmin && !isOwn}
+                initialImageUrls={(post as unknown as { image_urls?: string[] }).image_urls ?? []}
+                userId={user?.id ?? undefined}
               />
             ) : (
               <>
                 <h1 className="mb-3 text-2xl font-semibold tracking-tight">{post.title}</h1>
                 <div className="prose-fp text-sm" dangerouslySetInnerHTML={{ __html: post.body_html }} />
+                <ImageGrid urls={(post as unknown as { image_urls?: string[] }).image_urls ?? []} />
               </>
             )}
 
@@ -228,7 +234,7 @@ export default async function PostDetailPage({
         </h2>
 
         <div className="mb-6">
-          <CommentForm postId={post.id} authed={authed} />
+          <CommentForm postId={post.id} authed={authed} userId={user?.id ?? undefined} />
         </div>
 
         <CommentTree nodes={tree} postId={post.id} authed={authed} currentUserId={user?.id ?? null} isAdmin={isAdmin} />

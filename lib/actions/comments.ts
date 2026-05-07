@@ -67,6 +67,7 @@ export async function createComment(formData: FormData): Promise<ActionResult<{ 
     parentPath = String(parent.path ?? parent.id);
   }
 
+  const imageUrls = (formData.get("imageUrls") as string ?? "").split(",").filter(Boolean).slice(0, 3);
   const html = renderMarkdownSafe(parsed.data.body);
 
   // Insertamos con un path provisional y luego lo actualizamos con el id real.
@@ -83,6 +84,7 @@ export async function createComment(formData: FormData): Promise<ActionResult<{ 
       body_html: html,
       depth,
       path: tempPath,
+      image_urls: imageUrls,
     })
     .select("id")
     .single();

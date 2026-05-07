@@ -35,7 +35,7 @@ export default async function CreatePostPage({
       <p className="mb-6 text-sm text-muted-foreground">
         Publicando en <span className="font-medium text-foreground">s/{subforum.slug}</span> · {subforum.name}
       </p>
-      <CreatePostForm subforumSlug={subforum.slug} />
+      <CreatePostForm subforumSlug={subforum.slug} userId={user.id} />
     </div>
   );
 }

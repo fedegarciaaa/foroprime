@@ -9,6 +9,7 @@ import { VoteButtons } from "@/components/post/vote-buttons";
 import { CommentForm } from "@/components/comment/comment-form";
 import { toast } from "@/components/ui/toaster";
 import { deleteComment } from "@/lib/actions/comments";
+import { ImageGrid } from "@/components/ui/image-grid";
 import { formatRelativeEs, cn } from "@/lib/utils";
 
 export type CommentNode = {
@@ -25,6 +26,7 @@ export type CommentNode = {
   created_at: string;
   deleted_at: string | null;
   my_vote: -1 | 0 | 1;
+  image_urls: string[];
   children: CommentNode[];
 };
 
@@ -51,7 +53,7 @@ export function CommentTree({
   return (
     <ul className="space-y-3">
       {nodes.map((n) => (
-        <CommentItem key={n.id} node={n} postId={postId} authed={authed} currentUserId={currentUserId} isAdmin={isAdmin} />
+        <CommentItem key={n.id} node={n} postId={postId} authed={authed} currentUserId={currentUserId} isAdmin={isAdmin} userId={currentUserId ?? undefined} />
       ))}
     </ul>
   );
@@ -63,12 +65,14 @@ function CommentItem({
   authed,
   currentUserId,
   isAdmin,
+  userId,
 }: {
   node: CommentNode;
   postId: number;
   authed: boolean;
   currentUserId?: string | null;
   isAdmin?: boolean;
+  userId?: string;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [replying, setReplying] = useState(false);
@@ -118,10 +122,15 @@ function CommentItem({
               {isDeleted ? (
                 <p className="mt-1 text-sm italic text-muted-foreground">[comentario eliminado]</p>
               ) : (
-                <div
-                  className="prose-fp mt-1 text-sm"
-                  dangerouslySetInnerHTML={{ __html: node.body_html }}
-                />
+                <>
+                  <div
+                    className="prose-fp mt-1 text-sm"
+                    dangerouslySetInnerHTML={{ __html: node.body_html }}
+                  />
+                  {node.image_urls.length > 0 && (
+                    <ImageGrid urls={node.image_urls} />
+                  )}
+                </>
               )}
               <div className="mt-1 flex items-center gap-1">
                 <VoteButtons
@@ -160,6 +169,7 @@ function CommentItem({
                     postId={postId}
                     parentId={node.id}
                     authed={authed}
+                    userId={userId}
                     onDone={() => setReplying(false)}
                     autoFocus
                     compact
@@ -169,7 +179,7 @@ function CommentItem({
               {node.children.length > 0 ? (
                 <ul className="mt-3 space-y-3">
                   {node.children.map((c) => (
-                    <CommentItem key={c.id} node={c} postId={postId} authed={authed} currentUserId={currentUserId} isAdmin={isAdmin} />
+                    <CommentItem key={c.id} node={c} postId={postId} authed={authed} currentUserId={currentUserId} isAdmin={isAdmin} userId={userId} />
                   ))}
                 </ul>
               ) : null}

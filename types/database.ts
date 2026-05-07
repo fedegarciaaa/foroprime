@@ -23,6 +23,7 @@ export type Database = {
           deleted_at: string | null
           depth: number
           id: number
+          image_urls: string[]
           parent_id: number | null
           path: unknown
           post_id: number
@@ -37,6 +38,7 @@ export type Database = {
           deleted_at?: string | null
           depth?: number
           id?: never
+          image_urls?: string[]
           parent_id?: number | null
           path: unknown
           post_id: number
@@ -51,6 +53,7 @@ export type Database = {
           deleted_at?: string | null
           depth?: number
           id?: never
+          image_urls?: string[]
           parent_id?: number | null
           path?: unknown
           post_id?: number
@@ -90,6 +93,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           id: number
+          image_urls: string[]
           score: number
           search_vector: unknown
           slug: string
@@ -105,6 +109,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: never
+          image_urls?: string[]
           score?: number
           search_vector?: unknown
           slug: string
@@ -120,6 +125,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: never
+          image_urls?: string[]
           score?: number
           search_vector?: unknown
           slug?: string
@@ -404,6 +410,7 @@ export type Database = {
           depth: number
           display_name: string
           id: number
+          image_urls: string[]
           my_vote: number
           parent_id: number
           path: unknown
